@@ -1,9 +1,57 @@
-module ctf_wcw::hack { 
+module movectf::move_lock {
+    
+    // [*] Import dependencies
     use std::vector;
-    use sui::tx_context::{TxContext};
-    use movectf::move_lock::{Self, ResourceObject};
+
+    use sui::event;
+    use sui::object::{Self, UID};
+    use sui::transfer;
+    use sui::tx_context::{Self, TxContext};
+ 
+    // [*] Structs
+    struct ResourceObject has key, store {
+        id : UID,
+        balance: u128,
+        q1: bool
+    }
+ 
+    struct Flag has copy, drop {
+        user: address,
+        flag: bool
+    }
+ 
+    // [*] Module initializer
+    fun init(ctx: &mut TxContext) {
+        transfer::share_object(ResourceObject {
+            id: object::new(ctx),
+            balance: 100,
+            q1: false,
+        })
+    }
+ 
+    // [*] Public functions
+    public entry fun movectf_unlock(data1 : vector<u64>, data2 : vector<u64>, resource_object: &mut ResourceObject, _ctx: &mut TxContext) {
+        
+        let encrypted_flag : vector<u64> = vector[19, 16, 17, 11, 9, 21, 18, 
+                                                  2, 3, 22, 7, 4, 25, 21, 5, 
+                                                  7, 23, 6, 23, 5, 13, 3, 5, 
+                                                  9, 16, 12, 22, 14, 3, 14, 12, 
+                                                  22, 18, 4, 3, 9, 2, 19, 5, 
+                                                  16, 7, 20, 1, 11, 18, 23, 4, 
+                                                  15, 20, 5, 24, 9, 1, 12, 5, 
+                                                  16, 10, 7, 2, 1, 21, 1, 25, 
+                                                  18, 22, 2, 2, 7, 25, 15, 7, 10];
+
+        if (movectf_lock(data1, data2) == encrypted_flag) {
+            if (!resource_object.q1) {
+                resource_object.q1 = true;
+            }
+        }
+
+    }
 
     fun movectf_lock(data1 : vector<u64>, data2 : vector<u64>) : vector<u64> {
+        
         let input1 = copy data1;
         let plaintext = &mut input1;
         let plaintext_length = vector::length(plaintext);
@@ -67,51 +115,12 @@ module ctf_wcw::hack {
         };    
 
         ciphertext
+        
     }
 
-    public entry fun get_flag(resource_object: &mut ResourceObject, ctx: &mut TxContext) {
-        let key : vector<u64> = vector[25, 11, 6, 10, 13, 25, 12, 19, 2];
-        let plattext : vector<u64> = vector[
-             2, 14, 13, 6, 17, 0, 19, 
-             20, 11, 0, 19, 8, 14, 13,
-             18, 24, 14, 20, 12, 0, 
-             13, 0, 6, 4, 3, 19, 14, 
-             1, 17, 4, 0, 10, 19, 7,
-             4, 7, 8, 11, 11, 2, 8, 
-             15, 7, 4, 17, 7, 0, 2, 
-             10, 19, 7, 4, 7, 0, 2, 
-             10, 24, 15, 11, 0, 13, 4, 19];
-
-        move_lock::movectf_unlock(plattext, key, resource_object, ctx);
-        move_lock::get_flag(resource_object, ctx);
-    }
-
-    #[test]
-    public fun test_movectf_lock() {
-        let key : vector<u64> = vector[25, 11, 6, 10, 13, 25, 12, 19, 2];
-        let plattext : vector<u64> = vector[
-             2, 14, 13, 6, 17, 0, 19, 
-             20, 11, 0, 19, 8, 14, 13,
-             18, 24, 14, 20, 12, 0, 
-             13, 0, 6, 4, 3, 19, 14, 
-             1, 17, 4, 0, 10, 19, 7,
-             4, 7, 8, 11, 11, 2, 8, 
-             15, 7, 4, 17, 7, 0, 2, 
-             10, 19, 7, 4, 7, 0, 2, 
-             10, 24, 15, 11, 0, 13, 4, 19];
-
-        let encrypted_flag : vector<u64> = vector[
-            19, 16, 17, 11, 9, 21, 18, 
-            2, 3, 22, 7, 4, 25, 21, 5, 
-            7, 23, 6, 23, 5, 13, 3, 5, 
-            9, 16, 12, 22, 14, 3, 14, 12, 
-            22, 18, 4, 3, 9, 2, 19, 5, 
-            16, 7, 20, 1, 11, 18, 23, 4, 
-            15, 20, 5, 24, 9, 1, 12, 5, 
-            16, 10, 7, 2, 1, 21, 1, 25, 
-            18, 22, 2, 2, 7, 25, 15, 7, 10];
-
-        // check if accessor functions return correct values
-        assert!(movectf_lock(plattext, key) == encrypted_flag, 1);
+    public entry fun get_flag(resource_object: &ResourceObject, ctx: &mut TxContext) {
+        if (resource_object.q1) {
+            event::emit(Flag { user: tx_context::sender(ctx), flag: true })
+        }
     }
 }

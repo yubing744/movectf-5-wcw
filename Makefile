@@ -8,7 +8,13 @@ test:
 	sui move test
 
 publish:
-	sui client publish --gas-budget 1000
+	sui client publish --gas-budget 100000
 
 hack:
-	sui client call --function get_flag --module hack --package 0xd0f39cc3a37bf726788d3ae29580825aa5ad4022 --gas-budget 10000 --args 0x37199c8a9c83338e6bea3a30002eaa0eab510860
+	sui client call --function get_flag --module hack --package 0xf11c20731dde8f546cb5f3dc1b47042e419a4b5a --gas-budget 100000 --args 0x6bf75aa353945025d12ae7484807748699bee5ec
+
+encode_flag:
+	python ./encode_flag.py
+
+decode_flag:
+	python ./decode_flag.py

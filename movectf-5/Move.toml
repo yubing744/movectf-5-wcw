@@ -1,11 +1,11 @@
 [package]
-name = "ctf_wcw"
+name = "movectf"
 version = "0.0.1"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "devnet" }
-movectf = { local = "./movectf-5" }
+# Sui = { local = "/Users/chris/src/sui/crates/sui-framework/"}
 
 [addresses]
-ctf_wcw =  "0x0"
+movectf = "0xc3f899047eebf596c94cbc3474ca5fbe92edb4d7"
 sui =  "0000000000000000000000000000000000000002"
